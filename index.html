@@ -40,20 +40,37 @@
       100% { transform: translateY(0); }
     }
 
-    /* BOTÓN METAR */
-    .metar-btn {
-      display: inline-block;
+    /* FORM METAR */
+    .metar-box {
       margin-top: 30px;
-      padding: 12px 24px;
+    }
+
+    .metar-box input {
+      padding: 8px;
+      font-size: 16px;
+      width: 220px;
+      text-transform: uppercase;
+    }
+
+    .metar-box button {
+      padding: 8px 16px;
+      font-size: 16px;
+      margin-left: 5px;
+      cursor: pointer;
       background-color: #2e7d32;
       color: white;
-      text-decoration: none;
-      font-size: 16px;
+      border: none;
       border-radius: 6px;
     }
 
-    .metar-btn:hover {
+    .metar-box button:hover {
       background-color: #1b5e20;
+    }
+
+    #metar-result {
+      margin-top: 15px;
+      font-weight: bold;
+      white-space: pre-wrap;
     }
   </style>
 </head>
@@ -67,7 +84,33 @@
   <p>Aviation made simple.</p>
   <p>Learning step by step 🚀</p>
 
-  <a href="#" class="metar-btn">METAR</a>
+  <div class="metar-box">
+    <input type="text" id="icao" placeholder="Enter ICAO (e.g. MRPV)">
+    <button onclick="getMetar()">Get METAR</button>
+
+    <p id="metar-result"></p>
+  </div>
+
+  <script>
+    function getMetar() {
+      const icao = document.getElementById("icao").value.toUpperCase();
+      const result = document.getElementById("metar-result");
+
+      if (icao.length !== 4) {
+        result.textContent = "Please enter a valid ICAO code (4 letters)";
+        return;
+      }
+
+      fetch(https://aviationweather.gov/api/data/metar?ids=${icao}&format=raw)
+        .then(response => response.text())
+        .then(data => {
+          result.textContent = data || "No METAR found";
+        })
+        .catch(() => {
+          result.textContent = "Error retrieving METAR";
+        });
+    }
+  </script>
 
 </body>
 </html>

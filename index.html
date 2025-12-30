@@ -2,68 +2,72 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>My First Website</title>
-  <style>
-   body {
-  font-family: Arial, sans-serif;
-  background-color: #A7C7E7;
-  text-align: center;
-  padding-top: 60px;
-  color: #2c3e50;
-}
-h1 {
-  font-size: 60px;
-  color: #1b4f72; 
-}
-   p {
-  font-size: 16px;
-  color: #555;
-}
-<a href="#" class="metar-btn">METAR</a>
-/* ANIMACIÓN DEL AVIÓN */
-.plane {
-  display: inline-block;
-  margin-left: 10px;
-  animation: float 2.5s ease-in-out infinite;
-}
-.plane:hover {
-  animation-duration: 1.2s;
-}    
-.metar-btn {
-  display: inline-block;
-  margin-top: 30px;
-  padding: 12px 24px;
-  background-color: #2e7d32;
-  color: white;
-  text-decoration: none;
-  font-size: 16px;
-  border-radius: 6px;
-}
+  <title>Fly and Learn</title>
 
-.metar-btn:hover {
-  background-color: #1b5e20;
-}
-@keyframes float {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #A7C7E7;
+      text-align: center;
+      padding-top: 60px;
+      color: #2c3e50;
+    }
+
+    h1 {
+      font-size: 60px;
+      color: #1b4f72;
+    }
+
+    p {
+      font-size: 16px;
+      color: #555;
+    }
+
+    /* AVIÓN */
+    .plane {
+      display: inline-block;
+      margin-left: 10px;
+      animation: float 2.5s ease-in-out infinite;
+    }
+
+    .plane:hover {
+      animation-duration: 1.2s;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+      100% { transform: translateY(0); }
+    }
+
+    /* BOTÓN METAR */
+    .metar-btn {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 12px 24px;
+      background-color: #2e7d32;
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      border-radius: 6px;
+    }
+
+    .metar-btn:hover {
+      background-color: #1b5e20;
+    }
   </style>
 </head>
+
 <body>
 
- <h1>
-  Fly and Learn <span class="plane">✈️</span>
-</h1>
+  <h1>
+    Fly and Learn <span class="plane">✈️</span>
+  </h1>
+
   <p>Aviation made simple.</p>
   <p>Learning step by step 🚀</p>
-  <p> Capi Casky </p>
+
+  <a href="#" class="metar-btn">METAR</a>
 
 </body>
 </html>

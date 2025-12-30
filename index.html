@@ -1,140 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Fly and Learn</title>
+<script>
+  function getWeather() {
+    const icao = document.getElementById("icao").value.trim().toUpperCase();
+    const metarBox = document.getElementById("metar-result");
+    const tafBox = document.getElementById("taf-result");
+    const notamBox = document.getElementById("notam-result");
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #A7C7E7;
-      text-align: center;
-      padding-top: 60px;
-      color: #2c3e50;
+    if (icao.length !== 4) {
+      metarBox.textContent = "Please enter a valid ICAO code (4 letters)";
+      tafBox.textContent = "—";
+      notamBox.textContent = "—";
+      return;
     }
 
-    h1 {
-      font-size: 60px;
-      color: #1b4f72;
-    }
-
-    p {
-      font-size: 16px;
-      color: #555;
-    }
-
-    /* AVIÓN */
-    .plane {
-      display: inline-block;
-      margin-left: 10px;
-      animation: float 2.5s ease-in-out infinite;
-    }
-
-    .plane:hover {
-      animation-duration: 1.2s;
-    }
-
-    @keyframes float {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-      100% { transform: translateY(0); }
-    }
-
-    /* FORM METAR */
-    .metar-box {
-      margin-top: 30px;
-    }
-
-    .metar-box input {
-      padding: 8px;
-      font-size: 16px;
-      width: 220px;
-      text-transform: uppercase;
-    }
-
-    .metar-box button {
-      padding: 8px 16px;
-      font-size: 16px;
-      margin-left: 5px;
-      cursor: pointer;
-      background-color: #2e7d32;
-      color: white;
-      border: none;
-      border-radius: 6px;
-    }
-
-    .metar-box button:hover {
-      background-color: #1b5e20;
-    }
-
-    #metar-result {
-      margin-top: 15px;
-      font-weight: bold;
-      white-space: pre-wrap;
-    }
-  </style>
-</head>
-
-<body>
-
-  <h1>
-    Fly and Learn <span class="plane">✈️</span>
-  </h1>
-
-  <p>Aviation made simple.</p>
-  <p>Learning step by step 🚀</p>
-  <p>Capi Casky</p>
-
-  <div class="metar-box">
-    <input
-  type="text"
-  id="icao"
-  placeholder="Enter ICAO Code (e.g. MRPV)"
-  onkeydown="if (event.key === 'Enter') getMetar();"
-><input
-  type="text"
-  id="icao"
-  placeholder="Enter ICAO Code (e.g. MRPV)"
-  onkeydown="if (event.key === 'Enter') getMetar();"
->
-    <button type="button" onclick="getMetar()">Get METAR</button>
-
-    <p id="metar-result"></p>
-  </div>
-
-  <script>
-    function getMetar() {
-      const icao = document.getElementById("icao").value.trim().toUpperCase();
-      const result = document.getElementById("metar-result");
-
-      if (icao.length !== 4) {
-        result.textContent = "Please enter a valid ICAO code (4 letters)";
-        return;
-      }
-
-      result.textContent = "Loading METAR...";
-
-      fetch(
-        "https://api.allorigins.win/raw?url=" +
-        encodeURIComponent(
-          "https://aviationweather.gov/api/data/metar?ids=" +
-          icao +
-          "&format=raw"
-        )
+    /* ================= METAR ================= */
+    metarBox.textContent = "Loading METAR...";
+    fetch(
+      "https://api.allorigins.win/raw?url=" +
+      encodeURIComponent(
+        "https://aviationweather.gov/api/data/metar?ids=" +
+        icao +
+        "&format=raw"
       )
-        .then(response => response.text())
-        .then(data => {
-          if (data.trim() === "") {
-            result.textContent = "No METAR found for " + icao;
-          } else {
-            result.textContent = data;
-          }
-        })
-        .catch(() => {
-          result.textContent = "Error retrieving METAR";
-        });
-    }
-  </script>
+    )
+      .then(r => r.text())
+      .then(data => {
+        metarBox.textContent = data.trim() || "No METAR found for " + icao;
+      })
+      .catch(() => {
+        metarBox.textContent = "Error retrieving METAR";
+      });
 
-</body>
-</html>
+    /* ================= TAF ================= */
+    tafBox.textContent = "Loading TAF...";
+    fetch(
+      "https://api.allorigins.win/raw?url=" +
+      encodeURIComponent(
+        "https://aviationweather.gov/api/data/taf?ids=" +
+        icao +
+        "&format=raw"
+      )
+    )
+      .then(r => r.text())
+      .then(data => {
+        tafBox.textContent = data.trim() || "No TAF found for " + icao;
+      })
+      .catch(() => {
+        tafBox.textContent = "Error retrieving TAF";
+      });
+
+    /* ================= NOTAMs ================= */
+    notamBox.textContent = "Loading NOTAMs...";
+    fetch(
+      "https://api.allorigins.win/raw?url=" +
+      encodeURIComponent(
+        "https://aviationweather.gov/api/data/notam?ids=" + icao
+      )
+    )
+      .then(r => r.text())
+      .then(data => {
+        notamBox.textContent = data.trim() || "No NOTAMs found for " + icao;
+      })
+      .catch(() => {
+        notamBox.textContent = "Error retrieving NOTAMs";
+      });
+  }
+</script>

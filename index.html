@@ -86,14 +86,14 @@
 
   <div class="metar-box">
     <input type="text" id="icao" placeholder="Enter ICAO (e.g. MRPV)">
-    <button onclick="getMetar()">Get METAR</button>
+    <button type="button" onclick="getMetar()">Get METAR</button>
 
     <p id="metar-result"></p>
   </div>
 
   <script>
     function getMetar() {
-      const icao = document.getElementById("icao").value.toUpperCase();
+      const icao = document.getElementById("icao").value.trim().toUpperCase();
       const result = document.getElementById("metar-result");
 
       if (icao.length !== 4) {
@@ -101,10 +101,23 @@
         return;
       }
 
-      fetch(https://api.allorigins.win/raw?url=https://aviationweather.gov/api/data/metar?ids=${icao}&format=raw)
+      result.textContent = "Loading METAR...";
+
+      fetch(
+        "https://api.allorigins.win/raw?url=" +
+        encodeURIComponent(
+          "https://aviationweather.gov/api/data/metar?ids=" +
+          icao +
+          "&format=raw"
+        )
+      )
         .then(response => response.text())
         .then(data => {
-          result.textContent = data || "No METAR found";
+          if (data.trim() === "") {
+            result.textContent = "No METAR found for " + icao;
+          } else {
+            result.textContent = data;
+          }
         })
         .catch(() => {
           result.textContent = "Error retrieving METAR";

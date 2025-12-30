@@ -101,7 +101,7 @@
         return;
       }
 
-      fetch(https://aviationweather.gov/api/data/metar?ids=${icao}&format=raw)
+      fetch(https://api.allorigins.win/raw?url=https://aviationweather.gov/api/data/metar?ids=${icao}&format=raw)
         .then(response => response.text())
         .then(data => {
           result.textContent = data || "No METAR found";

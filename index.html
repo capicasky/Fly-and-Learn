@@ -12,47 +12,68 @@ body {
   padding: 40px 15px;
   color: #2c3e50;
 }
+
 h1 {
   font-size: 48px;
   color: #1b4f72;
 }
+
 .plane {
   display: inline-block;
   animation: float 2.5s ease-in-out infinite;
 }
+
 @keyframes float {
   0% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
   100% { transform: translateY(0); }
 }
+
+/* CONTENEDOR */
 .metar-box {
   max-width: 420px;
   margin: 30px auto;
 }
-input {
+
+/* CONTROLES (input + botones iguales) */
+.control {
   width: 100%;
   padding: 12px;
   font-size: 14px;
-  text-transform: uppercase;
+  box-sizing: border-box;
   margin-bottom: 10px;
 }
-button {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
+
+input.control {
+  text-transform: uppercase;
+}
+
+button.control {
   background: #2e7d32;
   color: white;
   border: none;
   border-radius: 6px;
+  cursor: pointer;
 }
+
+button.control.secondary {
+  background: #455a64;
+}
+
+button.control:hover {
+  opacity: 0.9;
+}
+
+/* RESULTADOS */
 .result-box {
-  margin-top: 15px;
-  background: #fff;
+  margin-top: 10px;
+  background: #ffffff;
   padding: 12px;
   border-radius: 6px;
   text-align: left;
   font-family: monospace;
   white-space: pre-wrap;
+  font-size: 14px;
 }
 </style>
 </head>
@@ -64,8 +85,12 @@ button {
 <p><strong>Capi Casky</strong></p>
 
 <div class="metar-box">
-  <input id="icao" placeholder="Enter ICAO (e.g. MRPV)">
-  <button onclick="getWeather()">Get Weather</button>
+
+  <!-- ICAO -->
+  <input id="icao" class="control" placeholder="Enter ICAO (e.g. MRPV)">
+
+  <!-- METAR + TAF -->
+  <button class="control" onclick="getWeather()">Get METAR & TAF</button>
 
   <h3>METAR</h3>
   <div id="metar-result" class="result-box">Waiting...</div>
@@ -73,8 +98,12 @@ button {
   <h3>TAF</h3>
   <div id="taf-result" class="result-box">Waiting...</div>
 
+  <!-- NOTAMS -->
+  <button class="control secondary" onclick="getNotams()">Get NOTAMs</button>
+
   <h3>NOTAMs</h3>
   <div id="notam-result" class="result-box">Waiting...</div>
+
 </div>
 
 <script>
@@ -82,33 +111,48 @@ function getWeather() {
   const icao = document.getElementById("icao").value.trim().toUpperCase();
   const metar = document.getElementById("metar-result");
   const taf = document.getElementById("taf-result");
-  const notam = document.getElementById("notam-result");
 
   if (icao.length !== 4) {
-    metar.textContent = "Invalid ICAO";
+    metar.textContent = "Invalid ICAO code";
     taf.textContent = "-";
-    notam.textContent = "-";
     return;
   }
 
   metar.textContent = "Loading METAR...";
   taf.textContent = "Loading TAF...";
+
+  fetch("https://api.allorigins.win/raw?url=" +
+    encodeURIComponent(
+      "https://aviationweather.gov/api/data/metar?ids=" + icao + "&format=raw"
+    ))
+    .then(r => r.text())
+    .then(d => metar.textContent = d.trim() || "No METAR found");
+
+  fetch("https://api.allorigins.win/raw?url=" +
+    encodeURIComponent(
+      "https://aviationweather.gov/api/data/taf?ids=" + icao + "&format=raw"
+    ))
+    .then(r => r.text())
+    .then(d => taf.textContent = d.trim() || "No TAF found");
+}
+
+function getNotams() {
+  const icao = document.getElementById("icao").value.trim().toUpperCase();
+  const notam = document.getElementById("notam-result");
+
+  if (icao.length !== 4) {
+    notam.textContent = "Invalid ICAO code";
+    return;
+  }
+
   notam.textContent = "Loading NOTAMs...";
 
   fetch("https://api.allorigins.win/raw?url=" +
-    encodeURIComponent("https://aviationweather.gov/api/data/metar?ids=" + icao + "&format=raw"))
+    encodeURIComponent(
+      "https://aviationweather.gov/api/data/notam?ids=" + icao
+    ))
     .then(r => r.text())
-    .then(d => metar.textContent = d || "No METAR");
-
-  fetch("https://api.allorigins.win/raw?url=" +
-    encodeURIComponent("https://aviationweather.gov/api/data/taf?ids=" + icao + "&format=raw"))
-    .then(r => r.text())
-    .then(d => taf.textContent = d || "No TAF");
-
-  fetch("https://api.allorigins.win/raw?url=" +
-    encodeURIComponent("https://aviationweather.gov/api/data/notam?ids=" + icao))
-    .then(r => r.text())
-    .then(d => notam.textContent = d || "No NOTAMs");
+    .then(d => notam.textContent = d.trim() || "No NOTAMs found");
 }
 </script>
 

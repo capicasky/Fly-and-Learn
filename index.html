@@ -86,7 +86,17 @@
   <p>Capi Casky</p>
 
   <div class="metar-box">
-    <input type="text" id="icao" placeholder="Enter ICAO Code (e.g. MRPV)">
+    <input
+  type="text"
+  id="icao"
+  placeholder="Enter ICAO Code (e.g. MRPV)"
+  onkeydown="if (event.key === 'Enter') getMetar();"
+><input
+  type="text"
+  id="icao"
+  placeholder="Enter ICAO Code (e.g. MRPV)"
+  onkeydown="if (event.key === 'Enter') getMetar();"
+>
     <button type="button" onclick="getMetar()">Get METAR</button>
 
     <p id="metar-result"></p>

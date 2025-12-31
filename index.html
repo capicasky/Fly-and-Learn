@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+[20:43, 30/12/2025] Casky Carlos : <button id="btn-metar" class="control">METAR / TAF</button>
+<button id="btn-wind" class="control secondary">Wind Component</button>
+[20:45, 30/12/2025] Casky Carlos : <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -29,7 +31,7 @@ h1 {
   100% { transform: translateY(0); }
 }
 
-.metar-box {
+.container {
   max-width: 420px;
   margin: 30px auto;
 }
@@ -38,8 +40,8 @@ h1 {
   width: 100%;
   padding: 12px;
   font-size: 14px;
-  box-sizing: border-box;
   margin-bottom: 10px;
+  box-sizing: border-box;
 }
 
 input.control {
@@ -54,7 +56,7 @@ button.control {
   cursor: pointer;
 }
 
-button.control.secondary {
+button.secondary {
   background: #455a64;
 }
 
@@ -63,14 +65,14 @@ button.control:hover {
 }
 
 .result-box {
-  margin-top: 10px;
-  background: #ffffff;
+  background: #fff;
   padding: 12px;
   border-radius: 6px;
   text-align: left;
   font-family: monospace;
   white-space: pre-wrap;
   font-size: 14px;
+  margin-top: 8px;
 }
 </style>
 </head>
@@ -81,41 +83,30 @@ button.control:hover {
 <p>Aviation made simple.</p>
 <p><strong>Capi Casky</strong></p>
 
-<div class="metar-box">
+<div class="container">
 
   <!-- METAR / TAF BUTTON -->
-  <button class="control" onclick="toggleMetar()">
-    METAR / TAF
-  </button>
+  <button id="btn-metar" class="control">METAR / TAF</button>
 
   <!-- METAR MODULE -->
-  <div id="metar-module" style="display:none; margin-top:15px;">
+  <div id="metar-module" style="display:none;">
     <input id="icao" class="control" placeholder="Enter ICAO (e.g. MRPV)">
-
     <div id="metar-result" class="result-box">Waiting...</div>
     <div id="taf-result" class="result-box">Waiting...</div>
-
     <p style="font-size:12px; opacity:0.7;">
       For training and educational purposes only.
     </p>
   </div>
 
   <!-- WIND COMPONENT BUTTON -->
-  <button class="control secondary" onclick="toggleWind()">
-    Wind Component
-  </button>
+  <button id="btn-wind" class="control secondary">Wind Component</button>
 
   <!-- WIND MODULE -->
-  <div id="wind-module" style="display:none; margin-top:15px;">
-
+  <div id="wind-module" style="display:none;">
     <input id="runway" class="control" placeholder="Runway heading (deg)">
     <input id="wind-dir" class="control" placeholder="Wind direction (deg)">
     <input id="wind-spd" class="control" placeholder="Wind speed (kt)">
-
-    <div id="wind-result" class="result-box">
-      Waiting...
-    </div>
-
+    <div id="wind-result" class="result-box">Waiting...</div>
     <p style="font-size:12px; opacity:0.7;">
       For training and educational purposes only.
     </p>
@@ -124,30 +115,37 @@ button.control:hover {
 </div>
 
 <script>
-/* TOGGLE MODULES */
-function toggleMetar() {
-  const box = document.getElementById("metar-module");
-  box.style.display = box.style.display === "none" ? "block" : "none";
-}
+document.addEventListener("DOMContentLoaded", function () {
 
-function toggleWind() {
-  const box = document.getElementById("wind-module");
-  box.style.display = box.style.display === "none" ? "block" : "none";
-}
+  // BOTONES
+  document.getElementById("btn-metar").addEventListener("click", () => {
+    toggle("metar-module");
+  });
 
-/* ENTER KEY HANDLING */
-document.addEventListener("keypress", function(e) {
-  if (e.key === "Enter") {
-    if (document.getElementById("metar-module").style.display === "block") {
-      getWeather();
+  document.getElementById("btn-wind").addEventListener("click", () => {
+    toggle("wind-module");
+  });
+
+  // ENTER
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      if (isVisible("metar-module")) getWeather();
+      if (isVisible("wind-module")) calcWind();
     }
-    if (document.getElementById("wind-module").style.display === "block") {
-      calcWind();
-    }
-  }
+  });
+
 });
 
-/* METAR / TAF */
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+function isVisible(id) {
+  return document.getElementById(id).style.display === "block";
+}
+
+// METAR / TAF
 function getWeather() {
   const icao = document.getElementById("icao").value.trim().toUpperCase();
   const metar = document.getElementById("metar-result");
@@ -177,15 +175,15 @@ function getWeather() {
     .then(d => taf.textContent = d.trim() || "No TAF found");
 }
 
-/* WIND COMPONENT */
+// WIND COMPONENT
 function calcWind() {
   const rwy = Number(document.getElementById("runway").value);
   const wdir = Number(document.getElementById("wind-dir").value);
   const wspd = Number(document.getElementById("wind-spd").value);
+  const out = document.getElementById("wind-result");
 
   if (!rwy || !wdir || !wspd) {
-    document.getElementById("wind-result").textContent =
-      "Please enter all values.";
+    out.textContent = "Please enter all values.";
     return;
   }
 
@@ -196,7 +194,7 @@ function calcWind() {
   const cross = Math.round(wspd * Math.sin(rad));
   const head = Math.round(wspd * Math.cos(rad));
 
-  document.getElementById("wind-result").textContent =
+  out.textContent =
     Crosswind: ${Math.abs(cross)} kt\n +
     ${head >= 0 ? "Headwind" : "Tailwind"}: ${Math.abs(head)} kt;
 }

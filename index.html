@@ -155,7 +155,7 @@ button:hover {
     type="text"
     id="icao"
     class="icao-input"
-    placeholder="Enter ICAO code (e.g. MROC)"
+    placeholder="Enter ICAO code (e.g. MRPV)"
     maxlength="4"
   >
 
@@ -178,10 +178,6 @@ button:hover {
 const icaoInput = document.getElementById("icao");
 const resultBox = document.getElementById("result");
 const favoritesDiv = document.getElementById("favorites");
-
-icaoInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") getMetar();
-});
 
 function saveFavorite(icao) {
   let favs = JSON.parse(localStorage.getItem("favs")) || [];
@@ -250,21 +246,51 @@ async function getTaf() {
     decodeTaf(raw);
 }
 
+/* -------- DECODE METAR (COMPLETO) -------- */
 function decodeMetar(raw) {
   let html = `<div class="decoded"><div class="decoded-title">Decoded</div>`;
 
-  const wind = raw.match(/(\d{3})(\d{2})KT/);
-  if (wind)
-    html += `<div class="decoded-row">🌬️ Wind: ${wind[1]}° at ${wind[2]} kt</div>`;
+  // WIND (with gusts)
+  const wind = raw.match(/(\d{3}|VRB)(\d{2})(G\d{2})?KT/);
+  if (wind) {
+    const dir = wind[1] === "VRB" ? "Variable" : wind[1] + "°";
+    const spd = wind[2];
+    const gst = wind[3] ? ` (gusts ${wind[3].slice(1)} kt)` : "";
+    html += `<div class="decoded-row">🌬️ Wind: ${dir} at ${spd} kt${gst}</div>`;
+  }
 
+  // VISIBILITY
+  const visSM = raw.match(/(\d+ ?\d?\/?\d*)SM/);
+  const visM = raw.match(/ 9999 /);
+  if (visSM) {
+    html += `<div class="decoded-row">👁️ Visibility: ${visSM[1]} statute miles</div>`;
+  } else if (visM) {
+    html += `<div class="decoded-row">👁️ Visibility: 10 km or more</div>`;
+  }
+
+  // CLOUDS (no duplicates)
+  const cloudMap = { FEW:"Few", SCT:"Scattered", BKN:"Broken", OVC:"Overcast" };
   const clouds = [...new Set(raw.match(/(FEW|SCT|BKN|OVC)\d{3}/g) || [])];
   clouds.forEach(c => {
-    html += `<div class="decoded-row">☁️ Clouds at ${parseInt(c.slice(3))*100} ft</div>`;
+    html += `<div class="decoded-row">☁️ ${cloudMap[c.slice(0,3)]} clouds at ${parseInt(c.slice(3))*100} ft</div>`;
   });
+
+  // TEMP / DEW
+  const temp = raw.match(/(\d{2})\/(\d{2})/);
+  if (temp) {
+    html += `<div class="decoded-row">🌡️ Temperature / Dew point: ${temp[1]}°C / ${temp[2]}°C</div>`;
+  }
+
+  // ALTIMETER
+  const alt = raw.match(/A(\d{4})/);
+  if (alt) {
+    html += `<div class="decoded-row">🎚️ Altimeter: ${(alt[1]/100).toFixed(2)} inHg</div>`;
+  }
 
   return html + `</div>`;
 }
 
+/* -------- DECODE TAF (REFINED, SIMPLIFIED) -------- */
 function decodeTaf(raw) {
   let html = `<div class="decoded"><div class="decoded-title">Decoded TAF (training – simplified)</div>`;
 
@@ -282,8 +308,9 @@ function decodeTaf(raw) {
     }
 
     const wind = b.match(/(\d{3})(\d{2})KT/);
-    if (wind)
+    if (wind) {
       html += `<div class="decoded-row">🌬️ Wind: ${wind[1]}° at ${wind[2]} kt</div>`;
+    }
 
     const clouds = b.match(/(FEW|SCT|BKN|OVC)\d{3}/g) || [];
     clouds.forEach(c => {
@@ -299,4 +326,3 @@ renderFavorites();
 
 </body>
 </html>
-

@@ -105,6 +105,18 @@
       display: none;
     }
 
+    .decoded {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed #8ecae6;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+    }
+
+    .decoded div {
+      margin-bottom: 4px;
+    }
+
     .footer {
       margin-top: 22px;
       text-align: center;
@@ -138,7 +150,7 @@
   <div class="buttons">
     <button onclick="getMetar()">METAR</button>
     <button disabled>TAF</button>
-   <button disabled>Wind Component</button>
+    <button disabled>Wind Component</button>
   </div>
 
   <div id="favorites" class="favorites"></div>
@@ -197,11 +209,10 @@
     resultBox.textContent = "Loading METAR...";
 
     try {
-const url = `https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`;
-const res = await fetch(
-  `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
-);
-
+      const url = `https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`;
+      const res = await fetch(
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+      );
 
       if (!res.ok) {
         resultBox.textContent = "METAR not available.";
@@ -213,11 +224,41 @@ const res = await fetch(
       const raw = lines[lines.length - 1];
 
       saveFavorite(icao);
-      resultBox.textContent = raw;
+
+      resultBox.innerHTML =
+        `<strong>RAW METAR</strong>\n${raw}\n` +
+        decodeMetar(raw);
 
     } catch {
       resultBox.textContent = "Error retrieving METAR.";
     }
+  }
+
+  function decodeMetar(raw) {
+    let html = `<div class="decoded"><strong>Decoded</strong>`;
+
+    const wind = raw.match(/(\d{3}|VRB)(\d{2})(G\d{2})?KT/);
+    if (wind)
+      html += `<div>Wind: ${wind[1]}° at ${wind[2]} kt ${wind[3] || ""}</div>`;
+
+    const vis = raw.match(/ (\d{4}) /);
+    if (vis)
+      html += `<div>Visibility: ${vis[1]} meters</div>`;
+
+    const clouds = raw.match(/(FEW|SCT|BKN|OVC)(\d{3})/g);
+    if (clouds)
+      html += `<div>Clouds: ${clouds.join(", ")}</div>`;
+
+    const temp = raw.match(/(\d{2})\/(\d{2})/);
+    if (temp)
+      html += `<div>Temp / Dew: ${temp[1]}°C / ${temp[2]}°C</div>`;
+
+    const qnh = raw.match(/Q(\d{4})/);
+    if (qnh)
+      html += `<div>QNH: ${qnh[1]} hPa</div>`;
+
+    html += `</div>`;
+    return html;
   }
 
   renderFavorites();

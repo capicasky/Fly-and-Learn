@@ -124,6 +124,11 @@ button:hover {
   margin-bottom: 4px;
 }
 
+.hint {
+  font-style: italic;
+  color: #4a6a78;
+}
+
 .footer {
   margin-top: 22px;
   text-align: center;
@@ -146,7 +151,13 @@ button:hover {
   <h1>Fly and Learn</h1>
   <div class="subtitle">Aviation study tools – student use only</div>
 
-  <input id="icao" class="icao-input" maxlength="4" placeholder="Enter ICAO code (e.g. MROC)">
+  <input
+    type="text"
+    id="icao"
+    class="icao-input"
+    placeholder="Enter ICAO code (e.g. MROC)"
+    maxlength="4"
+  >
 
   <div class="buttons">
     <button onclick="getMetar()">METAR</button>
@@ -168,6 +179,10 @@ const icaoInput = document.getElementById("icao");
 const resultBox = document.getElementById("result");
 const favoritesDiv = document.getElementById("favorites");
 
+icaoInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") getMetar();
+});
+
 function saveFavorite(icao) {
   let favs = JSON.parse(localStorage.getItem("favs")) || [];
   if (!favs.includes(icao)) {
@@ -186,10 +201,16 @@ function renderFavorites() {
     btn.textContent = code;
     btn.onclick = () => {
       icaoInput.value = code;
-      getTaf();
+      showHint();
     };
     favoritesDiv.appendChild(btn);
   });
+}
+
+function showHint() {
+  resultBox.style.display = "block";
+  resultBox.innerHTML =
+    `<span class="hint">ICAO selected. Please select METAR or TAF.</span>`;
 }
 
 async function getMetar() {
@@ -208,20 +229,6 @@ async function getMetar() {
   resultBox.innerHTML =
     `<strong>RAW METAR</strong>\n${raw}\n` +
     decodeMetar(raw);
-}
-
-function decodeMetar(raw) {
-  let html = `<div class="decoded"><div class="decoded-title">Decoded</div>`;
-
-  const wind = raw.match(/(\d{3})(\d{2})KT/);
-  if (wind) html += `<div class="decoded-row">🌬️ Wind: ${wind[1]}° at ${wind[2]} kt</div>`;
-
-  const clouds = [...new Set(raw.match(/(FEW|SCT|BKN|OVC)\d{3}/g) || [])];
-  clouds.forEach(c => {
-    html += `<div class="decoded-row">☁️ Clouds at ${parseInt(c.slice(3))*100} ft</div>`;
-  });
-
-  return html + `</div>`;
 }
 
 async function getTaf() {
@@ -243,6 +250,21 @@ async function getTaf() {
     decodeTaf(raw);
 }
 
+function decodeMetar(raw) {
+  let html = `<div class="decoded"><div class="decoded-title">Decoded</div>`;
+
+  const wind = raw.match(/(\d{3})(\d{2})KT/);
+  if (wind)
+    html += `<div class="decoded-row">🌬️ Wind: ${wind[1]}° at ${wind[2]} kt</div>`;
+
+  const clouds = [...new Set(raw.match(/(FEW|SCT|BKN|OVC)\d{3}/g) || [])];
+  clouds.forEach(c => {
+    html += `<div class="decoded-row">☁️ Clouds at ${parseInt(c.slice(3))*100} ft</div>`;
+  });
+
+  return html + `</div>`;
+}
+
 function decodeTaf(raw) {
   let html = `<div class="decoded"><div class="decoded-title">Decoded TAF (training – simplified)</div>`;
 
@@ -260,7 +282,8 @@ function decodeTaf(raw) {
     }
 
     const wind = b.match(/(\d{3})(\d{2})KT/);
-    if (wind) html += `<div class="decoded-row">🌬️ Wind: ${wind[1]}° at ${wind[2]} kt</div>`;
+    if (wind)
+      html += `<div class="decoded-row">🌬️ Wind: ${wind[1]}° at ${wind[2]} kt</div>`;
 
     const clouds = b.match(/(FEW|SCT|BKN|OVC)\d{3}/g) || [];
     clouds.forEach(c => {
@@ -276,3 +299,4 @@ renderFavorites();
 
 </body>
 </html>
+

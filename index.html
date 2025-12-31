@@ -234,35 +234,68 @@
     }
   }
 
-  function decodeMetar(raw) {
-    let html = `<div class="decoded"><strong>Decoded</strong>`;
+  <script>
+function decodeMetar(raw) {
+  let html = `<div class="decoded"><strong>Decoded</strong>`;
 
-    const wind = raw.match(/(\d{3}|VRB)(\d{2})(G\d{2})?KT/);
-    if (wind)
-      html += `<div>Wind: ${wind[1]}° at ${wind[2]} kt ${wind[3] || ""}</div>`;
-
-    const vis = raw.match(/ (\d{4}) /);
-    if (vis)
-      html += `<div>Visibility: ${vis[1]} meters</div>`;
-
-    const clouds = raw.match(/(FEW|SCT|BKN|OVC)(\d{3})/g);
-    if (clouds)
-      html += `<div>Clouds: ${clouds.join(", ")}</div>`;
-
-    const temp = raw.match(/(\d{2})\/(\d{2})/);
-    if (temp)
-      html += `<div>Temp / Dew: ${temp[1]}°C / ${temp[2]}°C</div>`;
-
-    const qnh = raw.match(/Q(\d{4})/);
-    if (qnh)
-      html += `<div>QNH: ${qnh[1]} hPa</div>`;
-
-    html += `</div>`;
-    return html;
+  // WIND
+  const wind = raw.match(/(\d{3}|VRB)(\d{2})(G\d{2})?KT/);
+  if (wind) {
+    const dir = wind[1] === "VRB" ? "Variable" : wind[1] + "°";
+    const spd = wind[2];
+    const gst = wind[3] ? ` (gusts ${wind[3].replace("G","")} kt)` : "";
+    html += `<div>Wind: ${dir} at ${spd} kt${gst}</div>`;
   }
+
+  // VISIBILITY
+  const vis = raw.match(/ (\d{4}) /);
+  if (vis) {
+    html += vis[1] === "9999"
+      ? `<div>Visibility: 10 km or more</div>`
+      : `<div>Visibility: ${(vis[1] / 1000).toFixed(1)} km</div>`;
+  }
+
+  // CLOUDS
+  const cloudMap = {
+    FEW: "Few clouds",
+    SCT: "Scattered clouds",
+    BKN: "Broken clouds",
+    OVC: "Overcast"
+  };
+
+  const clouds = raw.match(/(FEW|SCT|BKN|OVC)(\d{3})/g);
+  if (clouds) {
+    clouds.forEach(c => {
+      const type = cloudMap[c.substring(0,3)];
+      const height = parseInt(c.substring(3)) * 100;
+      html += `<div>${type} at ${height.toLocaleString()} ft</div>`;
+    });
+  }
+
+  // TEMP / DEW
+  const temp = raw.match(/(\d{2})\/(\d{2})/);
+  if (temp) {
+    html += `<div>Temperature / Dew point: ${temp[1]}°C / ${temp[2]}°C</div>`;
+  }
+
+  // QNH / ALTIMETER
+  const qnh = raw.match(/Q(\d{4})/);
+  const alt = raw.match(/A(\d{4})/);
+
+  if (qnh) html += `<div>QNH: ${qnh[1]} hPa</div>`;
+  if (alt) html += `<div>Altimeter: ${(alt[1] / 100).toFixed(2)} inHg</div>`;
+
+  html += `</div>`;
+  return html;
+}
+</script>
 
   renderFavorites();
 </script>
 
 </body>
 </html>
+
+
+
+

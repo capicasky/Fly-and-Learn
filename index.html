@@ -112,7 +112,7 @@ button {
   color: #4a6a78;
 }
 
-/* ---------- PDF BUTTON ---------- */
+/* PDF button */
 .pdf-link {
   display: inline-block;
   margin-bottom: 8px;
@@ -126,6 +126,11 @@ button {
 
 .pdf-link:hover {
   background-color: #eaf4fa;
+}
+
+/* HIDDEN ELEMENTS */
+.hidden {
+  display: none;
 }
 
 .footer {
@@ -153,17 +158,15 @@ button {
   <div class="buttons">
     <button onclick="getMetar()">METAR</button>
     <button onclick="getTaf()">TAF</button>
-    <button disabled>Wind Component</button>
+    <button class="hidden" disabled>Wind Component</button>
   </div>
 
   <div id="favorites" class="favorites"></div>
   <div id="result" class="result-box"></div>
 
   <div class="footer">
-    <a href="metar_taf_codes.pdf"
-       target="_blank"
-       class="pdf-link">
-       📄 METAR & TAF Codes (PDF)
+    <a href="metar_taf_codes.pdf" target="_blank" class="pdf-link">
+      📄 METAR & TAF Codes (PDF)
     </a>
     <div>Fly and Learn</div>
     <span>Capi Casky</span>

@@ -7,6 +7,7 @@
 <style>
 body {
   margin: 0;
+  padding: 0;
   font-family: Arial, Helvetica, sans-serif;
   background-color: #f4f1e8;
   color: #355f5b;
@@ -15,63 +16,144 @@ body {
 .container {
   max-width: 420px;
   margin: 40px auto;
-  background: #fff;
+  background: #ffffff;
   padding: 25px;
   border-radius: 14px;
   box-shadow: 0 6px 14px rgba(0,0,0,0.12);
 }
 
-h1 { text-align:center; color:#6fa89a; }
-.subtitle { text-align:center; font-size:13px; margin-bottom:20px; }
+h1 {
+  text-align: center;
+  color: #6fa89a;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 13px;
+  color: #4a6a78;
+  margin-bottom: 20px;
+}
 
 .icao-input {
-  width:100%; padding:14px; font-size:18px;
-  text-align:center; letter-spacing:2px;
-  border-radius:10px; border:2px solid #8ecae6;
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-radius: 10px;
+  border: 2px solid #8ecae6;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.icao-input:focus {
+  outline: none;
+  border-color: #6fa89a;
+  box-shadow: none;
 }
 
 .buttons {
-  display:flex; flex-direction:column; gap:12px; margin-top:18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 18px;
 }
 
 button {
-  padding:13px; font-size:15px;
-  border:none; border-radius:10px;
-  background:#6fa89a; color:#fff; cursor:pointer;
+  padding: 13px;
+  font-size: 15px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: #6fa89a;
+  color: white;
 }
 
-button:hover { background:#5c9688; }
+button:hover {
+  background-color: #5c9688;
+}
 
-.favorites { margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; }
+.favorites {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
 .fav-btn {
-  padding:6px 10px; font-size:13px;
-  border-radius:6px; border:1px solid #8ecae6;
-  background:#eaf4fa; cursor:pointer;
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid #8ecae6;
+  background-color: #eaf4fa;
+  cursor: pointer;
+}
+
+.fav-btn:hover {
+  background-color: #d8eef9;
 }
 
 .result-box {
-  margin-top:20px; padding:14px;
-  border-radius:10px; background:#eaf4fa;
-  border:1px solid #8ecae6;
-  font-size:14px; display:none;
+  margin-top: 20px;
+  padding: 14px;
+  border-radius: 10px;
+  background-color: #eaf4fa;
+  border: 1px solid #8ecae6;
+  font-family: "Courier New", monospace;
+  font-size: 14px;
+  white-space: pre-wrap;
+  display: none;
 }
 
-.decoded { margin-top:12px; border-top:1px dashed #8ecae6; padding-top:10px; }
-.decoded-title { font-weight:bold; margin-bottom:6px; }
-.row { display:flex; gap:6px; margin-bottom:4px; }
+.decoded {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #8ecae6;
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-.footer { text-align:center; font-size:12px; margin-top:20px; }
-.footer span { color:#8ecae6; font-style:italic; }
+.decoded-title {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.decoded-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.footer {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 12px;
+  color: #4a6a78;
+}
+
+.footer span {
+  display: block;
+  margin-top: 4px;
+  font-style: italic;
+  color: #8ecae6;
+}
 </style>
 </head>
 
 <body>
+
 <div class="container">
   <h1>Fly and Learn</h1>
   <div class="subtitle">Aviation study tools – student use only</div>
 
-  <input id="icao" class="icao-input" maxlength="4" placeholder="Enter ICAO (e.g. KMIA)">
+  <input
+    type="text"
+    id="icao"
+    class="icao-input"
+    placeholder="Enter ICAO code (e.g. KMIA)"
+    maxlength="4"
+  >
 
   <div class="buttons">
     <button onclick="getMetar()">METAR</button>
@@ -82,7 +164,10 @@ button:hover { background:#5c9688; }
   <div id="favorites" class="favorites"></div>
   <div id="result" class="result-box"></div>
 
-  <div class="footer">Fly and Learn <span>Capi Casky</span></div>
+  <div class="footer">
+    Fly and Learn
+    <span>Capi Casky</span>
+  </div>
 </div>
 
 <script>
@@ -90,63 +175,137 @@ const icaoInput = document.getElementById("icao");
 const resultBox = document.getElementById("result");
 const favoritesDiv = document.getElementById("favorites");
 
-function saveFavorite(icao){
+icaoInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") getMetar();
+});
+
+function saveFavorite(icao) {
   let favs = JSON.parse(localStorage.getItem("favs")) || [];
-  if(!favs.includes(icao)){ favs.unshift(icao); if(favs.length>5) favs.pop(); }
-  localStorage.setItem("favs",JSON.stringify(favs));
+  if (!favs.includes(icao)) {
+    favs.unshift(icao);
+    if (favs.length > 5) favs.pop();
+    localStorage.setItem("favs", JSON.stringify(favs));
+  }
   renderFavorites();
 }
 
-function renderFavorites(){
-  favoritesDiv.innerHTML="";
-  (JSON.parse(localStorage.getItem("favs"))||[]).forEach(c=>{
-    const b=document.createElement("div");
-    b.className="fav-btn"; b.textContent=c;
-    b.onclick=()=>{icaoInput.value=c;};
-    favoritesDiv.appendChild(b);
+function renderFavorites() {
+  favoritesDiv.innerHTML = "";
+  const favs = JSON.parse(localStorage.getItem("favs")) || [];
+  favs.forEach(code => {
+    const btn = document.createElement("div");
+    btn.className = "fav-btn";
+    btn.textContent = code;
+    btn.onclick = () => {
+      icaoInput.value = code;
+      getMetar();
+    };
+    favoritesDiv.appendChild(btn);
   });
 }
 
-async function getMetar(){
-  const icao=icaoInput.value.trim().toUpperCase();
-  if(icao.length!==4) return;
-  resultBox.style.display="block";
-  resultBox.textContent="Loading METAR...";
-  const url=`https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`;
-  const r=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
-  const raw=(await r.text()).trim().split("\n").pop();
-  saveFavorite(icao);
-  resultBox.innerHTML=`<b>RAW METAR</b><br>${raw}`;
+async function getMetar() {
+  const icao = icaoInput.value.trim().toUpperCase();
+  if (icao.length !== 4) return;
+
+  resultBox.style.display = "block";
+  resultBox.textContent = "Loading METAR...";
+
+  try {
+    const url = `https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`;
+    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+    const text = await res.text();
+    const raw = text.trim().split("\n").pop();
+
+    saveFavorite(icao);
+
+    resultBox.innerHTML =
+      `<strong>RAW METAR</strong>\n${raw}\n` +
+      decodeMetar(raw);
+
+  } catch {
+    resultBox.textContent = "Error retrieving METAR.";
+  }
 }
 
-async function getTaf(){
-  const icao=icaoInput.value.trim().toUpperCase();
-  if(icao.length!==4) return;
-  resultBox.style.display="block";
-  resultBox.textContent="Loading TAF...";
-  const url=`https://tgftp.nws.noaa.gov/data/forecasts/taf/stations/${icao}.TXT`;
-  const r=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
-  const text=(await r.text()).trim();
-  saveFavorite(icao);
+async function getTaf() {
+  const icao = icaoInput.value.trim().toUpperCase();
+  if (icao.length !== 4) return;
 
-  const lines=text.split("\n").slice(1).join(" ");
-  const blocks=lines.split(/ FM| TEMPO | BECMG /);
+  resultBox.style.display = "block";
+  resultBox.textContent = "Loading TAF...";
 
-  let html=`<b>RAW TAF</b><br>${lines}<div class="decoded">`;
-  blocks.forEach((b,i)=>{
-    html+=`<div class="decoded-title">${i===0?"Initial":"Change"}</div>`;
-    if(/(\d{3})(\d{2})KT/.test(b))
-      html+=`<div class="row">🌬️ Wind: ${b.match(/(\d{3})(\d{2})KT/)[1]}° at ${b.match(/(\d{3})(\d{2})KT/)[2]} kt</div>`;
-    if(/(\d+)SM/.test(b))
-      html+=`<div class="row">👁️ Visibility: ${b.match(/(\d+)SM/)[1]} SM</div>`;
-    if(/(FEW|SCT|BKN|OVC)\d{3}/.test(b))
-      html+=`<div class="row">☁️ Clouds present</div>`;
+  try {
+    const url = `https://tgftp.nws.noaa.gov/data/forecasts/taf/stations/${icao}.TXT`;
+    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+    const text = await res.text();
+    const raw = text.trim().split("\n").slice(1).join(" ");
+
+    saveFavorite(icao);
+
+    resultBox.innerHTML =
+      `<strong>RAW TAF</strong>\n${raw}\n` +
+      decodeTaf(raw);
+
+  } catch {
+    resultBox.textContent = "Error retrieving TAF.";
+  }
+}
+
+function decodeMetar(raw) {
+  let html = `<div class="decoded"><div class="decoded-title">Decoded</div>`;
+
+  const wind = raw.match(/(\d{3}|VRB)(\d{2})(G\d{2})?KT/);
+  if (wind) {
+    html += `<div class="decoded-row">🌬️ Wind: ${wind[1]}° at ${wind[2]} kt${wind[3] ? " (gusts "+wind[3].slice(1)+" kt)" : ""}</div>`;
+  }
+
+  const visSM = raw.match(/(\d+ ?\d?\/?\d*)SM/);
+  if (visSM) {
+    html += `<div class="decoded-row">👁️ Visibility: ${visSM[1]} statute miles</div>`;
+  }
+
+  const cloudMap = { FEW:"Few", SCT:"Scattered", BKN:"Broken", OVC:"Overcast" };
+  const clouds = [...new Set(raw.match(/(FEW|SCT|BKN|OVC)\d{3}/g) || [])];
+  clouds.forEach(c => {
+    html += `<div class="decoded-row">☁️ ${cloudMap[c.slice(0,3)]} clouds at ${parseInt(c.slice(3))*100} ft</div>`;
   });
-  html+="</div>";
-  resultBox.innerHTML=html;
+
+  const temp = raw.match(/(\d{2})\/(\d{2})/);
+  if (temp) {
+    html += `<div class="decoded-row">🌡️ Temperature / Dew point: ${temp[1]}°C / ${temp[2]}°C</div>`;
+  }
+
+  const alt = raw.match(/A(\d{4})/);
+  if (alt) {
+    html += `<div class="decoded-row">🎚️ Altimeter: ${(alt[1]/100).toFixed(2)} inHg</div>`;
+  }
+
+  return html + `</div>`;
+}
+
+function decodeTaf(raw) {
+  let html = `<div class="decoded"><div class="decoded-title">Decoded TAF (simplified)</div>`;
+
+  const parts = raw.split(/ FM| TEMPO | BECMG /);
+  parts.forEach((p, i) => {
+    html += `<div class="decoded-title">${i === 0 ? "Initial" : "Change"}</div>`;
+
+    const wind = p.match(/(\d{3})(\d{2})KT/);
+    if (wind) html += `<div class="decoded-row">🌬️ Wind: ${wind[1]}° at ${wind[2]} kt</div>`;
+
+    const vis = p.match(/(\d+)SM/);
+    if (vis) html += `<div class="decoded-row">👁️ Visibility: ${vis[1]} SM</div>`;
+
+    if (/(FEW|SCT|BKN|OVC)\d{3}/.test(p))
+      html += `<div class="decoded-row">☁️ Clouds present</div>`;
+  });
+
+  return html + `</div>`;
 }
 
 renderFavorites();
 </script>
+
 </body>
 </html>

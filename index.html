@@ -35,7 +35,7 @@ h1 {
   margin: 30px auto;
 }
 
-/* CONTROLES (input + botones iguales) */
+/* CONTROLES */
 .control {
   width: 100%;
   padding: 12px;
@@ -75,6 +75,11 @@ button.control:hover {
   white-space: pre-wrap;
   font-size: 14px;
 }
+
+/* ESPACIO BOTÓN NOTAM */
+.notam-btn {
+  margin-top: 22px;
+}
 </style>
 </head>
 
@@ -99,7 +104,9 @@ button.control:hover {
   <div id="taf-result" class="result-box">Waiting...</div>
 
   <!-- NOTAMS -->
-  <button class="control secondary" onclick="getNotams()">Get NOTAMs</button>
+  <button class="control secondary notam-btn" onclick="getNotams()">
+    Get NOTAMs
+  </button>
 
   <h3>NOTAMs</h3>
   <div id="notam-result" class="result-box">Waiting...</div>
@@ -107,6 +114,13 @@ button.control:hover {
 </div>
 
 <script>
+/* ENTER = Get METAR & TAF */
+document.getElementById("icao").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") {
+    getWeather();
+  }
+});
+
 function getWeather() {
   const icao = document.getElementById("icao").value.trim().toUpperCase();
   const metar = document.getElementById("metar-result");
@@ -137,22 +151,10 @@ function getWeather() {
 }
 
 function getNotams() {
-  const icao = document.getElementById("icao").value.trim().toUpperCase();
   const notam = document.getElementById("notam-result");
-
-  if (icao.length !== 4) {
-    notam.textContent = "Invalid ICAO code";
-    return;
-  }
-
-  notam.textContent = "Loading NOTAMs...";
-
-  fetch("https://api.allorigins.win/raw?url=" +
-    encodeURIComponent(
-      "https://aviationweather.gov/api/data/notam?ids=" + icao
-    ))
-    .then(r => r.text())
-    .then(d => notam.textContent = d.trim() || "No NOTAMs found");
+  notam.textContent =
+    "NOTAMs are not available from this data source.\n" +
+    "Please consult official briefing sources.";
 }
 </script>
 

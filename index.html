@@ -113,8 +113,22 @@
       font-size: 14px;
     }
 
-    .decoded div {
+    .decoded-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #355f5b;
+    }
+
+    .decoded-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       margin-bottom: 4px;
+    }
+
+    .decoded-icon {
+      width: 18px;
+      text-align: center;
     }
 
     .footer {
@@ -235,21 +249,36 @@
   }
 
   function decodeMetar(raw) {
-    let html = `<div class="decoded"><strong>Decoded</strong>`;
+    let html = `
+      <div class="decoded">
+        <div class="decoded-title">Decoded</div>
+    `;
 
     const wind = raw.match(/(\d{3}|VRB)(\d{2})(G\d{2})?KT/);
     if (wind) {
       const dir = wind[1] === "VRB" ? "Variable" : wind[1] + "°";
       const spd = wind[2];
       const gst = wind[3] ? ` (gusts ${wind[3].replace("G","")} kt)` : "";
-      html += `<div>Wind: ${dir} at ${spd} kt${gst}</div>`;
+      html += `
+        <div class="decoded-row">
+          <span class="decoded-icon">🌬️</span>
+          <span>Wind: ${dir} at ${spd} kt${gst}</span>
+        </div>`;
     }
 
     const vis = raw.match(/ (\d{4}) /);
     if (vis) {
-      html += vis[1] === "9999"
-        ? `<div>Visibility: 10 km or more</div>`
-        : `<div>Visibility: ${(vis[1] / 1000).toFixed(1)} km</div>`;
+      html += `
+        <div class="decoded-row">
+          <span class="decoded-icon">👁️</span>
+          <span>
+            Visibility: ${
+              vis[1] === "9999"
+                ? "10 km or more"
+                : (vis[1] / 1000).toFixed(1) + " km"
+            }
+          </span>
+        </div>`;
     }
 
     const cloudMap = {
@@ -264,27 +293,6 @@
       clouds.forEach(c => {
         const type = cloudMap[c.substring(0,3)];
         const height = parseInt(c.substring(3)) * 100;
-        html += `<div>${type} at ${height.toLocaleString()} ft</div>`;
-      });
-    }
+        html += `
+          <div class="decoded-row">
 
-    const temp = raw.match(/(\d{2})\/(\d{2})/);
-    if (temp) {
-      html += `<div>Temperature / Dew point: ${temp[1]}°C / ${temp[2]}°C</div>`;
-    }
-
-    const qnh = raw.match(/Q(\d{4})/);
-    const alt = raw.match(/A(\d{4})/);
-
-    if (qnh) html += `<div>QNH: ${qnh[1]} hPa</div>`;
-    if (alt) html += `<div>Altimeter: ${(alt[1] / 100).toFixed(2)} inHg</div>`;
-
-    html += `</div>`;
-    return html;
-  }
-
-  renderFavorites();
-</script>
-
-</body>
-</html>

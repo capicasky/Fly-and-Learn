@@ -197,8 +197,9 @@
     resultBox.textContent = "Loading METAR...";
 
     try {
-  const res = await fetch(
-  `https://api.allorigins.win/raw?url=https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`
+const url = `https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`;
+const res = await fetch(
+  `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
 );
 
 
@@ -224,4 +225,3 @@
 
 </body>
 </html>
-

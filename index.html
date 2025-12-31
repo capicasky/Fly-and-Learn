@@ -37,7 +37,8 @@ h1 { text-align:center; color:#6fa89a; margin-bottom:5px; }
   box-shadow: none;
   appearance: none;
 }
-  .icao-input:focus {
+
+.icao-input:focus {
   border-color: #6fa89a;
   outline: none;
   box-shadow: none;
@@ -111,12 +112,29 @@ button {
   color: #4a6a78;
 }
 
+/* ---------- PDF BUTTON ---------- */
+.pdf-link {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #6fa89a;
+  text-decoration: none;
+  border: 1px solid #8ecae6;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.pdf-link:hover {
+  background-color: #eaf4fa;
+}
+
 .footer {
   text-align:center;
   font-size:12px;
   margin-top:20px;
   color:#4a6a78;
 }
+
 .footer span {
   color:#8ecae6;
   font-style:italic;
@@ -141,7 +159,15 @@ button {
   <div id="favorites" class="favorites"></div>
   <div id="result" class="result-box"></div>
 
-  <div class="footer">Fly and Learn <span>Capi Casky</span></div>
+  <div class="footer">
+    <a href="Fly_and_Learn_METAR_TAF_Pilot_Core_Decoding.pdf"
+       target="_blank"
+       class="pdf-link">
+       📄 METAR & TAF Codes (PDF)
+    </a>
+    <div>Fly and Learn</div>
+    <span>Capi Casky</span>
+  </div>
 </div>
 
 <script>
@@ -236,19 +262,16 @@ async function getTaf(){
 function decodeTaf(raw){
   let html=`<div class="decoded"><div class="decoded-title">Decoded TAF (training – simplified)</div>`;
 
-  // BASE WIND
   const wind=raw.match(/(\d{3}|VRB)(\d{2})(G\d{2})?KT/);
   if(wind){
     html+=`<div class="decoded-row">🌬️ Wind (base): ${wind[1]}° at ${wind[2]} kt${wind[3]?" (gusts "+wind[3].slice(1)+" kt)":""}</div>`;
   }
 
-  // MAX TEMP
   const tx=raw.match(/TX(\d{2})/);
   if(tx){
     html+=`<div class="decoded-row">🌡️ Max temperature: ${tx[1]}°C</div>`;
   }
 
-  // MIN TEMP
   const tn=raw.match(/TN(\d{2})/);
   if(tn){
     html+=`<div class="decoded-row">🌡️ Min temperature: ${tn[1]}°C</div>`;

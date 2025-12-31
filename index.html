@@ -116,7 +116,6 @@
     .decoded-title {
       font-weight: bold;
       margin-bottom: 8px;
-      color: #355f5b;
     }
 
     .decoded-row {
@@ -153,13 +152,7 @@
   <h1>Fly and Learn</h1>
   <div class="subtitle">Aviation study tools – student use only</div>
 
-  <input
-    type="text"
-    id="icao"
-    class="icao-input"
-    placeholder="Enter ICAO code (e.g. MRPV)"
-    maxlength="4"
-  >
+  <input id="icao" class="icao-input" placeholder="Enter ICAO code (e.g. MRPV)" maxlength="4">
 
   <div class="buttons">
     <button onclick="getMetar()">METAR</button>
@@ -168,7 +161,6 @@
   </div>
 
   <div id="favorites" class="favorites"></div>
-
   <div id="result" class="result-box"></div>
 
   <div class="footer">
@@ -178,154 +170,98 @@
 </div>
 
 <script>
-  const icaoInput = document.getElementById("icao");
-  const resultBox = document.getElementById("result");
-  const favoritesDiv = document.getElementById("favorites");
+const icaoInput = document.getElementById("icao");
+const resultBox = document.getElementById("result");
+const favoritesDiv = document.getElementById("favorites");
 
-  icaoInput.addEventListener("keydown", e => {
-    if (e.key === "Enter") getMetar();
+icaoInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") getMetar();
+});
+
+function saveFavorite(icao) {
+  let favs = JSON.parse(localStorage.getItem("favs")) || [];
+  if (!favs.includes(icao)) {
+    favs.unshift(icao);
+    if (favs.length > 5) favs.pop();
+    localStorage.setItem("favs", JSON.stringify(favs));
+  }
+  renderFavorites();
+}
+
+function renderFavorites() {
+  favoritesDiv.innerHTML = "";
+  (JSON.parse(localStorage.getItem("favs")) || []).forEach(code => {
+    const btn = document.createElement("div");
+    btn.className = "fav-btn";
+    btn.textContent = code;
+    btn.onclick = () => { icaoInput.value = code; getMetar(); };
+    favoritesDiv.appendChild(btn);
+  });
+}
+
+async function getMetar() {
+  const icao = icaoInput.value.trim().toUpperCase();
+  if (icao.length !== 4) return;
+
+  resultBox.style.display = "block";
+  resultBox.textContent = "Loading METAR...";
+
+  try {
+    const url = `https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`;
+    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+    const text = await res.text();
+    const raw = text.trim().split("\n").pop();
+
+    saveFavorite(icao);
+
+    resultBox.innerHTML =
+      `<strong>RAW METAR</strong>\n${raw}\n` +
+      decodeMetar(raw);
+
+  } catch {
+    resultBox.textContent = "Error retrieving METAR.";
+  }
+}
+
+function decodeMetar(raw) {
+  let html = `<div class="decoded"><div class="decoded-title">Decoded</div>`;
+
+  const wind = raw.match(/(\d{3}|VRB)(\d{2})(G\d{2})?KT/);
+  if (wind) {
+    html += `<div class="decoded-row"><span class="decoded-icon">🌬️</span>
+      Wind: ${wind[1]}° at ${wind[2]} kt${wind[3] ? " (gusts "+wind[3].slice(1)+" kt)" : ""}</div>`;
+  }
+
+  const sm = raw.match(/(\d+ ?\d?\/?\d*)SM/);
+  if (sm) {
+    html += `<div class="decoded-row"><span class="decoded-icon">👁️</span>
+      Visibility: ${sm[1]} statute miles</div>`;
+  }
+
+  const cloudMap = { FEW:"Few", SCT:"Scattered", BKN:"Broken", OVC:"Overcast" };
+  const clouds = [...new Set(raw.match(/(FEW|SCT|BKN|OVC)\d{3}/g) || [])];
+  clouds.forEach(c => {
+    html += `<div class="decoded-row"><span class="decoded-icon">☁️</span>
+      ${cloudMap[c.slice(0,3)]} clouds at ${parseInt(c.slice(3))*100} ft</div>`;
   });
 
-  function saveFavorite(icao) {
-    let favs = JSON.parse(localStorage.getItem("favs")) || [];
-    if (!favs.includes(icao)) {
-      favs.unshift(icao);
-      if (favs.length > 5) favs.pop();
-      localStorage.setItem("favs", JSON.stringify(favs));
-    }
-    renderFavorites();
+  const temp = raw.match(/(\d{2})\/(\d{2})/);
+  if (temp) {
+    html += `<div class="decoded-row"><span class="decoded-icon">🌡️</span>
+      Temperature / Dew point: ${temp[1]}°C / ${temp[2]}°C</div>`;
   }
 
-  function renderFavorites() {
-    favoritesDiv.innerHTML = "";
-    const favs = JSON.parse(localStorage.getItem("favs")) || [];
-    favs.forEach(code => {
-      const btn = document.createElement("div");
-      btn.className = "fav-btn";
-      btn.textContent = code;
-      btn.onclick = () => {
-        icaoInput.value = code;
-        getMetar();
-      };
-      favoritesDiv.appendChild(btn);
-    });
+  const alt = raw.match(/A(\d{4})/);
+  if (alt) {
+    html += `<div class="decoded-row"><span class="decoded-icon">🎚️</span>
+      Altimeter: ${(alt[1]/100).toFixed(2)} inHg</div>`;
   }
 
-  async function getMetar() {
-    const icao = icaoInput.value.trim().toUpperCase();
-    if (icao.length !== 4) {
-      resultBox.style.display = "block";
-      resultBox.textContent = "Please enter a valid 4-letter ICAO code.";
-      return;
-    }
+  return html + `</div>`;
+}
 
-    resultBox.style.display = "block";
-    resultBox.textContent = "Loading METAR...";
-
-    try {
-      const url = `https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`;
-      const res = await fetch(
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
-      );
-
-      if (!res.ok) {
-        resultBox.textContent = "METAR not available.";
-        return;
-      }
-
-      const text = await res.text();
-      const lines = text.trim().split("\n");
-      const raw = lines[lines.length - 1];
-
-      saveFavorite(icao);
-
-      resultBox.innerHTML =
-        `<strong>RAW METAR</strong>\n${raw}\n` +
-        decodeMetar(raw);
-
-    } catch {
-      resultBox.textContent = "Error retrieving METAR.";
-    }
-  }
-
-  function decodeMetar(raw) {
-    let html = `
-      <div class="decoded">
-        <div class="decoded-title">Decoded</div>
-    `;
-
-    const wind = raw.match(/(\d{3}|VRB)(\d{2})(G\d{2})?KT/);
-    if (wind) {
-      const dir = wind[1] === "VRB" ? "Variable" : wind[1] + "°";
-      const spd = wind[2];
-      const gst = wind[3] ? ` (gusts ${wind[3].replace("G","")} kt)` : "";
-      html += `
-        <div class="decoded-row">
-          <span class="decoded-icon">🌬️</span>
-          <span>Wind: ${dir} at ${spd} kt${gst}</span>
-        </div>`;
-    }
-
-    const vis = raw.match(/ (\d{4}) /);
-    if (vis) {
-      html += `
-        <div class="decoded-row">
-          <span class="decoded-icon">👁️</span>
-          <span>
-            Visibility: ${
-              vis[1] === "9999"
-                ? "10 km or more"
-                : (vis[1] / 1000).toFixed(1) + " km"
-            }
-          </span>
-        </div>`;
-    }
-
-    const cloudMap = {
-      FEW: "Few clouds",
-      SCT: "Scattered clouds",
-      BKN: "Broken clouds",
-      OVC: "Overcast"
-    };
-
-    const clouds = raw.match(/(FEW|SCT|BKN|OVC)(\d{3})/g);
-    if (clouds) {
-      clouds.forEach(c => {
-        const type = cloudMap[c.substring(0,3)];
-        const height = parseInt(c.substring(3)) * 100;
-        html += `
-          <div class="decoded-row">
-            <span class="decoded-icon">☁️</span>
-            <span>${type} at ${height.toLocaleString()} ft</span>
-          </div>`;
-      });
-    }
-
-    const temp = raw.match(/(\d{2})\/(\d{2})/);
-    if (temp) {
-      html += `
-        <div class="decoded-row">
-          <span class="decoded-icon">🌡️</span>
-          <span>Temperature / Dew point: ${temp[1]}°C / ${temp[2]}°C</span>
-        </div>`;
-    }
-
-    const alt = raw.match(/A(\d{4})/);
-    if (alt) {
-      html += `
-        <div class="decoded-row">
-          <span class="decoded-icon">🎚️</span>
-          <span>Altimeter: ${(alt[1] / 100).toFixed(2)} inHg</span>
-        </div>`;
-    }
-
-    html += `</div>`;
-    return html;
-  }
-
-  renderFavorites();
+renderFavorites();
 </script>
 
 </body>
 </html>
-

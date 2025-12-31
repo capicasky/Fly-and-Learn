@@ -49,7 +49,6 @@ h1 {
 }
 
 .icao-input:focus {
-  outline: none;
   border-color: #6fa89a;
   box-shadow: none;
 }
@@ -116,7 +115,7 @@ button:hover {
 
 .decoded-title {
   font-weight: bold;
-  margin-bottom: 6px;
+  margin: 8px 0 4px;
 }
 
 .decoded-row {
@@ -147,13 +146,7 @@ button:hover {
   <h1>Fly and Learn</h1>
   <div class="subtitle">Aviation study tools – student use only</div>
 
-  <input
-    type="text"
-    id="icao"
-    class="icao-input"
-    placeholder="Enter ICAO code (e.g. KMIA)"
-    maxlength="4"
-  >
+  <input id="icao" class="icao-input" maxlength="4" placeholder="Enter ICAO code (e.g. MROC)">
 
   <div class="buttons">
     <button onclick="getMetar()">METAR</button>
@@ -175,10 +168,6 @@ const icaoInput = document.getElementById("icao");
 const resultBox = document.getElementById("result");
 const favoritesDiv = document.getElementById("favorites");
 
-icaoInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") getMetar();
-});
-
 function saveFavorite(icao) {
   let favs = JSON.parse(localStorage.getItem("favs")) || [];
   if (!favs.includes(icao)) {
@@ -191,14 +180,13 @@ function saveFavorite(icao) {
 
 function renderFavorites() {
   favoritesDiv.innerHTML = "";
-  const favs = JSON.parse(localStorage.getItem("favs")) || [];
-  favs.forEach(code => {
+  (JSON.parse(localStorage.getItem("favs")) || []).forEach(code => {
     const btn = document.createElement("div");
     btn.className = "fav-btn";
     btn.textContent = code;
     btn.onclick = () => {
       icaoInput.value = code;
-      getMetar();
+      getTaf();
     };
     favoritesDiv.appendChild(btn);
   });
@@ -211,21 +199,29 @@ async function getMetar() {
   resultBox.style.display = "block";
   resultBox.textContent = "Loading METAR...";
 
-  try {
-    const url = `https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`;
-    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
-    const text = await res.text();
-    const raw = text.trim().split("\n").pop();
+  const url = `https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`;
+  const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+  const raw = (await res.text()).trim().split("\n").pop();
 
-    saveFavorite(icao);
+  saveFavorite(icao);
 
-    resultBox.innerHTML =
-      `<strong>RAW METAR</strong>\n${raw}\n` +
-      decodeMetar(raw);
+  resultBox.innerHTML =
+    `<strong>RAW METAR</strong>\n${raw}\n` +
+    decodeMetar(raw);
+}
 
-  } catch {
-    resultBox.textContent = "Error retrieving METAR.";
-  }
+function decodeMetar(raw) {
+  let html = `<div class="decoded"><div class="decoded-title">Decoded</div>`;
+
+  const wind = raw.match(/(\d{3})(\d{2})KT/);
+  if (wind) html += `<div class="decoded-row">🌬️ Wind: ${wind[1]}° at ${wind[2]} kt</div>`;
+
+  const clouds = [...new Set(raw.match(/(FEW|SCT|BKN|OVC)\d{3}/g) || [])];
+  clouds.forEach(c => {
+    html += `<div class="decoded-row">☁️ Clouds at ${parseInt(c.slice(3))*100} ft</div>`;
+  });
+
+  return html + `</div>`;
 }
 
 async function getTaf() {
@@ -235,70 +231,41 @@ async function getTaf() {
   resultBox.style.display = "block";
   resultBox.textContent = "Loading TAF...";
 
-  try {
-    const url = `https://tgftp.nws.noaa.gov/data/forecasts/taf/stations/${icao}.TXT`;
-    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
-    const text = await res.text();
-    const raw = text.trim().split("\n").slice(1).join(" ");
+  const url = `https://tgftp.nws.noaa.gov/data/forecasts/taf/stations/${icao}.TXT`;
+  const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+  const rawLines = (await res.text()).trim().split("\n");
+  const raw = rawLines.slice(1).join(" ");
 
-    saveFavorite(icao);
+  saveFavorite(icao);
 
-    resultBox.innerHTML =
-      `<strong>RAW TAF</strong>\n${raw}\n` +
-      decodeTaf(raw);
-
-  } catch {
-    resultBox.textContent = "Error retrieving TAF.";
-  }
-}
-
-function decodeMetar(raw) {
-  let html = `<div class="decoded"><div class="decoded-title">Decoded</div>`;
-
-  const wind = raw.match(/(\d{3}|VRB)(\d{2})(G\d{2})?KT/);
-  if (wind) {
-    html += `<div class="decoded-row">🌬️ Wind: ${wind[1]}° at ${wind[2]} kt${wind[3] ? " (gusts "+wind[3].slice(1)+" kt)" : ""}</div>`;
-  }
-
-  const visSM = raw.match(/(\d+ ?\d?\/?\d*)SM/);
-  if (visSM) {
-    html += `<div class="decoded-row">👁️ Visibility: ${visSM[1]} statute miles</div>`;
-  }
-
-  const cloudMap = { FEW:"Few", SCT:"Scattered", BKN:"Broken", OVC:"Overcast" };
-  const clouds = [...new Set(raw.match(/(FEW|SCT|BKN|OVC)\d{3}/g) || [])];
-  clouds.forEach(c => {
-    html += `<div class="decoded-row">☁️ ${cloudMap[c.slice(0,3)]} clouds at ${parseInt(c.slice(3))*100} ft</div>`;
-  });
-
-  const temp = raw.match(/(\d{2})\/(\d{2})/);
-  if (temp) {
-    html += `<div class="decoded-row">🌡️ Temperature / Dew point: ${temp[1]}°C / ${temp[2]}°C</div>`;
-  }
-
-  const alt = raw.match(/A(\d{4})/);
-  if (alt) {
-    html += `<div class="decoded-row">🎚️ Altimeter: ${(alt[1]/100).toFixed(2)} inHg</div>`;
-  }
-
-  return html + `</div>`;
+  resultBox.innerHTML =
+    `<strong>RAW TAF</strong>\n${raw}\n` +
+    decodeTaf(raw);
 }
 
 function decodeTaf(raw) {
-  let html = `<div class="decoded"><div class="decoded-title">Decoded TAF (simplified)</div>`;
+  let html = `<div class="decoded"><div class="decoded-title">Decoded TAF (training – simplified)</div>`;
 
-  const parts = raw.split(/ FM| TEMPO | BECMG /);
-  parts.forEach((p, i) => {
-    html += `<div class="decoded-title">${i === 0 ? "Initial" : "Change"}</div>`;
+  const blocks = raw.match(/(FM\d{6}|TEMPO \d{4}\/\d{4}|BECMG \d{4}\/\d{4}|^[^F|T|B]+)/g) || [];
 
-    const wind = p.match(/(\d{3})(\d{2})KT/);
+  blocks.forEach(b => {
+    if (b.startsWith("FM")) {
+      html += `<div class="decoded-title">From ${b.substring(2,4)}Z</div>`;
+    } else if (b.startsWith("TEMPO")) {
+      html += `<div class="decoded-title">Temporary ${b.substring(6,8)}Z–${b.substring(11,13)}Z</div>`;
+    } else if (b.startsWith("BECMG")) {
+      html += `<div class="decoded-title">Becoming ${b.substring(7,9)}Z–${b.substring(12,14)}Z</div>`;
+    } else {
+      html += `<div class="decoded-title">Initial conditions</div>`;
+    }
+
+    const wind = b.match(/(\d{3})(\d{2})KT/);
     if (wind) html += `<div class="decoded-row">🌬️ Wind: ${wind[1]}° at ${wind[2]} kt</div>`;
 
-    const vis = p.match(/(\d+)SM/);
-    if (vis) html += `<div class="decoded-row">👁️ Visibility: ${vis[1]} SM</div>`;
-
-    if (/(FEW|SCT|BKN|OVC)\d{3}/.test(p))
-      html += `<div class="decoded-row">☁️ Clouds present</div>`;
+    const clouds = b.match(/(FEW|SCT|BKN|OVC)\d{3}/g) || [];
+    clouds.forEach(c => {
+      html += `<div class="decoded-row">☁️ ${c.slice(0,3)} clouds at ${parseInt(c.slice(3))*100} ft</div>`;
+    });
   });
 
   return html + `</div>`;

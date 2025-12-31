@@ -105,12 +105,6 @@
       display: none;
     }
 
-    .decoded {
-      margin-top: 10px;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 14px;
-    }
-
     .footer {
       margin-top: 22px;
       text-align: center;
@@ -204,37 +198,24 @@
 
     try {
       const res = await fetch(
-        `https://aviationweather.gov/api/data/metar?ids=${icao}&format=json`
+        `https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`
       );
-      const data = await res.json();
-      if (!data || data.length === 0) {
+
+      if (!res.ok) {
         resultBox.textContent = "METAR not available.";
         return;
       }
 
-      const raw = data[0].rawOb;
-      saveFavorite(icao);
+      const text = await res.text();
+      const lines = text.trim().split("\n");
+      const raw = lines[lines.length - 1];
 
-      resultBox.innerHTML = `<strong>RAW METAR</strong>\n${raw}\n\n${decodeMetar(raw)}`;
+      saveFavorite(icao);
+      resultBox.textContent = raw;
 
     } catch {
       resultBox.textContent = "Error retrieving METAR.";
     }
-  }
-
-  function decodeMetar(raw) {
-    let out = "<strong>DECODED</strong>\n";
-
-    const wind = raw.match(/(\d{3}|VRB)(\d{2})(G\d{2})?KT/);
-    if (wind) out += `Wind: ${wind[1]}° ${wind[2]} kt ${wind[3] || ""}\n`;
-
-    const temp = raw.match(/(\d{2})\/(\d{2})/);
-    if (temp) out += `Temp / Dew: ${temp[1]}°C / ${temp[2]}°C\n`;
-
-    const qnh = raw.match(/Q(\d{4})/);
-    if (qnh) out += `QNH: ${qnh[1]} hPa\n`;
-
-    return out;
   }
 
   renderFavorites();
@@ -242,3 +223,4 @@
 
 </body>
 </html>
+

@@ -197,9 +197,10 @@
     resultBox.textContent = "Loading METAR...";
 
     try {
-      const res = await fetch(
-        `https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`
-      );
+  const res = await fetch(
+  `https://api.allorigins.win/raw?url=https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`
+);
+
 
       if (!res.ok) {
         resultBox.textContent = "METAR not available.";

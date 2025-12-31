@@ -1,203 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Fly and Learn</title>
+  <meta charset="UTF-8">
+  <title>Fly and Learn – Aviation Tools</title>
 
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background-color: #A7C7E7;
-  text-align: center;
-  padding: 40px 15px;
-  color: #2c3e50;
-}
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #f4f1e8;
+      color: #355f5b;
+    }
 
-h1 {
-  font-size: 48px;
-  color: #1b4f72;
-}
+    .container {
+      max-width: 420px;
+      margin: 40px auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 14px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+    }
 
-.plane {
-  display: inline-block;
-  animation: float 2.5s ease-in-out infinite;
-}
+    h1 {
+      text-align: center;
+      color: #6fa89a;
+      margin-bottom: 5px;
+    }
 
-@keyframes float {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-  100% { transform: translateY(0); }
-}
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: #4a6a78;
+      margin-bottom: 20px;
+    }
 
-.container {
-  max-width: 420px;
-  margin: 30px auto;
-}
+    .icao-input {
+      width: 100%;
+      padding: 14px;
+      font-size: 18px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border-radius: 10px;
+      border: 2px solid #8ecae6;
+      box-sizing: border-box;
+    }
 
-.control {
-  width: 100%;
-  padding: 12px;
-  font-size: 14px;
-  margin-bottom: 10px;
-  box-sizing: border-box;
-}
+    .icao-input:focus {
+      outline: none;
+      border-color: #6fa89a;
+    }
 
-input.control {
-  text-transform: uppercase;
-}
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 18px;
+    }
 
-button.control {
-  background: #2e7d32;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
+    button {
+      padding: 13px;
+      font-size: 15px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: #6fa89a;
+      color: white;
+    }
 
-button.secondary {
-  background: #455a64;
-}
+    button:hover {
+      background-color: #5c9688;
+    }
 
-button.control:hover {
-  opacity: 0.9;
-}
+    .favorites {
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
 
-.result-box {
-  background: #fff;
-  padding: 12px;
-  border-radius: 6px;
-  text-align: left;
-  font-family: monospace;
-  white-space: pre-wrap;
-  font-size: 14px;
-  margin-top: 8px;
-}
-</style>
+    .fav-btn {
+      padding: 6px 10px;
+      font-size: 13px;
+      border-radius: 6px;
+      border: 1px solid #8ecae6;
+      background-color: #eaf4fa;
+      cursor: pointer;
+    }
+
+    .fav-btn:hover {
+      background-color: #d8eef9;
+    }
+
+    .result-box {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 10px;
+      background-color: #eaf4fa;
+      border: 1px solid #8ecae6;
+      font-family: "Courier New", monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      display: none;
+    }
+
+    .decoded {
+      margin-top: 10px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+    }
+
+    .footer {
+      margin-top: 22px;
+      text-align: center;
+      font-size: 12px;
+      color: #4a6a78;
+    }
+
+    .footer span {
+      display: block;
+      margin-top: 4px;
+      font-style: italic;
+      color: #8ecae6;
+    }
+  </style>
 </head>
 
 <body>
 
-<h1>Fly and Learn <span class="plane">✈️</span></h1>
-<p>Aviation made simple.</p>
-<p><strong>Capi Casky</strong></p>
-
 <div class="container">
+  <h1>Fly and Learn</h1>
+  <div class="subtitle">Aviation study tools – student use only</div>
 
-  <!-- METAR / TAF BUTTON -->
-  <button id="btn-metar" class="control">METAR / TAF</button>
+  <input
+    type="text"
+    id="icao"
+    class="icao-input"
+    placeholder="Enter ICAO code (e.g. MRPV)"
+    maxlength="4"
+  >
 
-  <!-- METAR MODULE -->
-  <div id="metar-module" style="display:none;">
-    <input id="icao" class="control" placeholder="Enter ICAO (e.g. MRPV)">
-    <div id="metar-result" class="result-box">Waiting...</div>
-    <div id="taf-result" class="result-box">Waiting...</div>
-    <p style="font-size:12px; opacity:0.7;">
-      For training and educational purposes only.
-    </p>
+  <div class="buttons">
+    <button onclick="getMetar()">Get METAR</button>
+    <button disabled>Wind Component</button>
+    <button disabled>TAF</button>
   </div>
 
-  <!-- WIND COMPONENT BUTTON -->
-  <button id="btn-wind" class="control secondary">Wind Component</button>
+  <div id="favorites" class="favorites"></div>
 
-  <!-- WIND MODULE -->
-  <div id="wind-module" style="display:none;">
-    <input id="runway" class="control" placeholder="Runway heading (deg)">
-    <input id="wind-dir" class="control" placeholder="Wind direction (deg)">
-    <input id="wind-spd" class="control" placeholder="Wind speed (kt)">
-    <div id="wind-result" class="result-box">Waiting...</div>
-    <p style="font-size:12px; opacity:0.7;">
-      For training and educational purposes only.
-    </p>
+  <div id="result" class="result-box"></div>
+
+  <div class="footer">
+    Fly and Learn
+    <span>Capi Casky</span>
   </div>
-
 </div>
 
 <script>
-  alert("HOLA");
-<script>  
-document.addEventListener("DOMContentLoaded", function () {
+  const icaoInput = document.getElementById("icao");
+  const resultBox = document.getElementById("result");
+  const favoritesDiv = document.getElementById("favorites");
 
-  // BOTONES
-  document.getElementById("btn-metar").addEventListener("click", () => {
-    toggle("metar-module");
+  icaoInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") getMetar();
   });
 
-  document.getElementById("btn-wind").addEventListener("click", () => {
-    toggle("wind-module");
-  });
-
-  // ENTER
-  document.addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-      if (isVisible("metar-module")) getWeather();
-      if (isVisible("wind-module")) calcWind();
+  function saveFavorite(icao) {
+    let favs = JSON.parse(localStorage.getItem("favs")) || [];
+    if (!favs.includes(icao)) {
+      favs.unshift(icao);
+      if (favs.length > 5) favs.pop();
+      localStorage.setItem("favs", JSON.stringify(favs));
     }
-  });
-
-});
-
-function toggle(id) {
-  const el = document.getElementById(id);
-  el.style.display = el.style.display === "block" ? "none" : "block";
-}
-
-function isVisible(id) {
-  return document.getElementById(id).style.display === "block";
-}
-
-// METAR / TAF
-function getWeather() {
-  const icao = document.getElementById("icao").value.trim().toUpperCase();
-  const metar = document.getElementById("metar-result");
-  const taf = document.getElementById("taf-result");
-
-  if (icao.length !== 4) {
-    metar.textContent = "Invalid ICAO code";
-    taf.textContent = "-";
-    return;
+    renderFavorites();
   }
 
-  metar.textContent = "Loading METAR...";
-  taf.textContent = "Loading TAF...";
-
-  fetch("https://api.allorigins.win/raw?url=" +
-    encodeURIComponent(
-      "https://aviationweather.gov/api/data/metar?ids=" + icao + "&format=raw"
-    ))
-    .then(r => r.text())
-    .then(d => metar.textContent = d.trim() || "No METAR found");
-
-  fetch("https://api.allorigins.win/raw?url=" +
-    encodeURIComponent(
-      "https://aviationweather.gov/api/data/taf?ids=" + icao + "&format=raw"
-    ))
-    .then(r => r.text())
-    .then(d => taf.textContent = d.trim() || "No TAF found");
-}
-
-// WIND COMPONENT
-function calcWind() {
-  const rwy = Number(document.getElementById("runway").value);
-  const wdir = Number(document.getElementById("wind-dir").value);
-  const wspd = Number(document.getElementById("wind-spd").value);
-  const out = document.getElementById("wind-result");
-
-  if (!rwy || !wdir || !wspd) {
-    out.textContent = "Please enter all values.";
-    return;
+  function renderFavorites() {
+    favoritesDiv.innerHTML = "";
+    const favs = JSON.parse(localStorage.getItem("favs")) || [];
+    favs.forEach(code => {
+      const btn = document.createElement("div");
+      btn.className = "fav-btn";
+      btn.textContent = code;
+      btn.onclick = () => {
+        icaoInput.value = code;
+        getMetar();
+      };
+      favoritesDiv.appendChild(btn);
+    });
   }
 
-  let angle = Math.abs(wdir - rwy);
-  if (angle > 180) angle = 360 - angle;
+  async function getMetar() {
+    const icao = icaoInput.value.trim().toUpperCase();
+    if (icao.length !== 4) {
+      resultBox.style.display = "block";
+      resultBox.textContent = "Please enter a valid 4-letter ICAO code.";
+      return;
+    }
 
-  const rad = angle * Math.PI / 180;
-  const cross = Math.round(wspd * Math.sin(rad));
-  const head = Math.round(wspd * Math.cos(rad));
+    resultBox.style.display = "block";
+    resultBox.textContent = "Loading METAR...";
 
-  out.textContent =
-    Crosswind: ${Math.abs(cross)} kt\n +
-    ${head >= 0 ? "Headwind" : "Tailwind"}: ${Math.abs(head)} kt;
-}
+    try {
+      const res = await fetch(
+        `https://aviationweather.gov/api/data/metar?ids=${icao}&format=json`
+      );
+      const data = await res.json();
+      if (!data || data.length === 0) {
+        resultBox.textContent = "METAR not available.";
+        return;
+      }
+
+      const raw = data[0].rawOb;
+      saveFavorite(icao);
+
+      resultBox.innerHTML = `<strong>RAW METAR</strong>\n${raw}\n\n${decodeMetar(raw)}`;
+
+    } catch {
+      resultBox.textContent = "Error retrieving METAR.";
+    }
+  }
+
+  function decodeMetar(raw) {
+    let out = "<strong>DECODED</strong>\n";
+
+    const wind = raw.match(/(\d{3}|VRB)(\d{2})(G\d{2})?KT/);
+    if (wind) out += `Wind: ${wind[1]}° ${wind[2]} kt ${wind[3] || ""}\n`;
+
+    const temp = raw.match(/(\d{2})\/(\d{2})/);
+    if (temp) out += `Temp / Dew: ${temp[1]}°C / ${temp[2]}°C\n`;
+
+    const qnh = raw.match(/Q(\d{4})/);
+    if (qnh) out += `QNH: ${qnh[1]} hPa\n`;
+
+    return out;
+  }
+
+  renderFavorites();
 </script>
 
 </body>

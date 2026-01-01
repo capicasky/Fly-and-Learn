@@ -96,14 +96,17 @@ button {
   margin-bottom:6px;
 }
 
+.hint {
+  font-style: italic;
+  color:#4a6a78;
+}
+
 .footer {
   text-align:center;
   font-size:12px;
   margin-top:20px;
   color:#4a6a78;
 }
-
-.hidden { display:none; }
 </style>
 </head>
 
@@ -157,15 +160,15 @@ function renderFavorites(){
     b.textContent=code;
     b.onclick=()=>{
       icaoInput.value=code;
-      chooseType(code);
+      showHint();
     };
     favoritesDiv.appendChild(b);
   });
 }
 
-function chooseType(icao){
-  const type = confirm("OK = METAR\nCancel = TAF") ? "METAR" : "TAF";
-  type === "METAR" ? getMetar() : getTaf();
+function showHint(){
+  resultBox.style.display="block";
+  resultBox.innerHTML=`<span class="hint">ICAO selected. Please choose METAR or TAF.</span>`;
 }
 
 /* ---------- AUTO REFRESH ---------- */
@@ -175,11 +178,11 @@ function startAutoRefresh(){
     if(lastICAO && lastType){
       lastType === "METAR" ? getMetar(true) : getTaf(true);
     }
-  }, 300000); // 5 min
+  }, 300000);
 }
 
 /* ---------- METAR ---------- */
-async function getMetar(auto=false){
+async function getMetar(){
   const icao=icaoInput.value.trim().toUpperCase();
   if(icao.length!==4) return;
 
@@ -220,7 +223,7 @@ function decodeMetar(raw){
 }
 
 /* ---------- TAF ---------- */
-async function getTaf(auto=false){
+async function getTaf(){
   const icao=icaoInput.value.trim().toUpperCase();
   if(icao.length!==4) return;
 
